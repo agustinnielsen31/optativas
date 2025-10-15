@@ -7,18 +7,29 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
+      max-width: 700px;
       margin: 60px auto;
       background: #f9fafc;
       color: #333;
-      padding: 20px;
+      padding: 30px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      line-height: 1.6;
     }
 
     h1 {
       text-align: center;
       font-size: 1.6em;
+      margin-bottom: 20px;
+    }
+
+    .intro {
+      background-color: #eef3ff;
+      border-left: 4px solid #007bff;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      font-size: 1em;
     }
 
     label {
@@ -79,11 +90,35 @@
       margin-top: 15px;
       font-size: 1.1em;
     }
+
+    .footer-link {
+      margin-top: 35px;
+      text-align: center;
+      font-size: 0.95em;
+    }
+
+    .footer-link a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .footer-link a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 
   <h1>Calculadora de Estudiantes por Optativa (Un cuatrimestre)</h1>
+
+  <div class="intro">
+    En el nuevo plan de estudios propuesto por la dirección de la carrera se marca una diferencia entre <strong>“Materias Electivas”</strong> y <strong>“Materias Optativas”</strong>.<br><br>
+    Las Electivas están determinadas en el plan de estudios, son 35 y se espera que tengan cátedras paralelas así como también reúnan equipos de cátedra. Podrán cursarse un máximo de 8 y un mínimo de 6.<br><br>
+    Las Optativas son de oferta renovable y de programa “libre”, tal como las actuales. Podrán cursarse un máximo de 2 y un mínimo de 0. Representan como máximo un 25% (8/2) de las materias de elección libre y un 0% como mínimo.<br><br>
+    Si una materia optativa no tiene más de 4 inscriptos durante dos cuatrimestres esa cátedra se cierra.<br><br>
+    <strong>¿El esquema que propone el plan actual es sustentable para las optativas?</strong> Esta calculadora permite averiguarlo teniendo en cuenta tres variables: cantidad de estudiantes en el tramo de elección libre, participación de optativas en la demanda y total de materias optativas.<br><br>
+    Por ejemplo, si hay 300 estudiantes y el 20% hace materias optativas, eso nos deja con 60 estudiantes que cursarán optativas. Si hay 20 materias entonces, como mínimo cada materia podrá tener 3 estudiantes (60/20 = 3), por lo cual el esquema sería insustentable.
+  </div>
 
   <label for="demanda">Participación de las optativas en la demanda de materias de elección libre (Máximo 25%):</label>
   <input type="range" id="demanda" min="0" max="0.25" step="0.01" value="0.10">
@@ -107,6 +142,12 @@
     <div id="alertaInsustentable" class="insustentable" style="display:none;">
       ⚠️ Esquema insustentable: menos de 4 estudiantes por materia.
     </div>
+  </div>
+
+  <div class="footer-link">
+    <a href="https://drive.google.com/file/d/1m5gV-mOwMK2oCS-o0kmOeaKn6JVfS47A/view?usp=sharing" target="_blank">
+      ¿Cómo fue construida esta calculadora? Apartado metodológico aquí →
+    </a>
   </div>
 
   <script>
@@ -150,3 +191,4 @@
 
 </body>
 </html>
+
