@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Optativas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 60px auto;
+      background: #f9fafc;
+      color: #333;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6em;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    input[type="number"], input[type="range"] {
+      width: 100%;
+      margin-top: 6px;
+      padding: 8px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .range-value {
+      text-align: right;
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      margin-top: 25px;
+      padding: 10px;
+      font-size: 1.1em;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .resultados {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #eef3ff;
+      border-radius: 8px;
+      font-size: 1.1em;
+    }
+
+    .resultado-item {
+      margin-top: 10px;
+    }
+
+    .insustentable {
+      color: #d40000;
+      font-weight: bold;
+      margin-top: 15px;
+      font-size: 1.1em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Calculadora de Estudiantes por Optativa (Un cuatrimestre)</h1>
+
+  <label for="demanda">Participación de las optativas en la demanda de materias de elección libre (Máximo 25%):</label>
+  <input type="range" id="demanda" min="0" max="0.25" step="0.01" value="0.10">
+  <div class="range-value">Valor actual: <span id="valorDemanda">0.10</span></div>
+
+  <label for="estudiantes">Cantidad de estudiantes cursando materias de elección libre:</label>
+  <input type="number" id="estudiantes" placeholder="Ej: 200" min="0">
+
+  <label for="optativas">Cantidad de materias optativas ofertadas:</label>
+  <input type="number" id="optativas" placeholder="Ej: 5" min="1">
+
+  <button id="calcularBtn">Calcular</button>
+
+  <div class="resultados" id="resultados">
+    <div class="resultado-item">
+      Total de estudiantes que cursarán optativas: <strong id="totalEstudiantes">-</strong>
+    </div>
+    <div class="resultado-item">
+      Estudiantes por cada optativa: <strong id="porOptativa">-</strong>
+    </div>
+    <div id="alertaInsustentable" class="insustentable" style="display:none;">
+      ⚠️ Esquema insustentable: menos de 4 estudiantes por materia.
+    </div>
+  </div>
+
+  <script>
+    const demandaInput = document.getElementById("demanda");
+    const valorDemanda = document.getElementById("valorDemanda");
+    const calcularBtn = document.getElementById("calcularBtn");
+
+    const totalEstudiantesEl = document.getElementById("totalEstudiantes");
+    const porOptativaEl = document.getElementById("porOptativa");
+    const alertaInsustentable = document.getElementById("alertaInsustentable");
+
+    // Mostrar valor actual de la barra
+    demandaInput.addEventListener("input", () => {
+      valorDemanda.textContent = Number(demandaInput.value).toFixed(2);
+    });
+
+    calcularBtn.addEventListener("click", () => {
+      const D = parseFloat(demandaInput.value);
+      const E = parseFloat(document.getElementById("estudiantes").value);
+      const A = parseFloat(document.getElementById("optativas").value);
+
+      if (isNaN(E) || isNaN(A) || A <= 0) {
+        alert("Por favor, completá todos los campos con valores válidos.");
+        return;
+      }
+
+      const total = D * E;
+      const porOptativa = total / A;
+
+      totalEstudiantesEl.textContent = total.toFixed(2);
+      porOptativaEl.textContent = porOptativa.toFixed(2);
+
+      // Mostrar alerta si hay menos de 4 estudiantes por materia
+      if (porOptativa < 4) {
+        alertaInsustentable.style.display = "block";
+      } else {
+        alertaInsustentable.style.display = "none";
+      }
+    });
+  </script>
+
+</body>
+</html>
