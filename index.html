@@ -182,7 +182,7 @@
     <div class="intro-content" id="intro-content">
       En el nuevo plan de estudios propuesto por la dirección de la carrera se marca una diferencia entre <strong>“Materias Electivas”</strong> y <strong>“Materias Optativas”</strong>.<br><br>
       Las Electivas están determinadas en el plan de estudios, son 35 y se espera que tengan cátedras paralelas así como también reúnan equipos de cátedra. Podrán cursarse un máximo de 8 y un mínimo de 6.<br><br>
-      Las Optativas son de oferta renovable y de programa “libre”, tal como las actuales. Podrán cursarse un máximo de 2 y un mínimo de 0. Representan como máximo un 25% (8/2) de las materias de elección libre y un 0% como mínimo.<br><br>
+      Las Optativas son de oferta renovable y de programa "libre", tal como las actuales. Podrán cursarse un máximo de 2 y un mínimo de 0. Representan como máximo un 25% (8/2) de las materias de elección libre y un 0% como mínimo.<br><br>
       Si una materia optativa no tiene más de 4 inscriptos durante dos cuatrimestres esa cátedra se cierra.<br><br>
       <strong>¿El esquema que propone el plan actual es sustentable para las optativas?</strong> Esta calculadora permite averiguarlo teniendo en cuenta tres variables: cantidad de estudiantes en el tramo de elección libre, participación de optativas en la demanda y total de materias optativas.<br><br>
       Por ejemplo, si hay 300 estudiantes y el 20% hace materias optativas, eso nos deja con 60 estudiantes que cursarán optativas. Si hay 20 cátedras de materias optativas entonces, como mínimo cada cátedra podrá tener 3 estudiantes (60/20 = 3), por lo cual el esquema sería insustentable.
@@ -224,10 +224,10 @@
     </p>
 
     <div class="pregunta">
-      <h3>¿Crees que el nuevo plan de estudios excluirá a cátedras?</h3>
+      <h3>¿Crees que el nuevo plan de estudios no excluirá a ninguna cátedra?</h3>
       <div class="botones">
-        <button onclick="votar('pregunta1','si')">Sí</button>
-        <button onclick="votar('pregunta1','no')">No</button>
+        <button data-pregunta="pregunta1" data-opcion="si">Sí</button>
+        <button data-pregunta="pregunta1" data-opcion="no">No</button>
       </div>
       <canvas id="grafico1" width="300" height="300"></canvas>
       <p id="porcentajes1" class="porcentajes">Cargando...</p>
@@ -236,8 +236,8 @@
     <div class="pregunta">
       <h3>¿Querés que las técnicas de investigación informáticas estén en una <em>Método 4</em> o que sean parte de los contenidos mínimos de las ya existentes <em>Método 1, 2 y 3</em>?</h3>
       <div class="botones">
-        <button onclick="votar('pregunta2','si')">Método 4</button>
-        <button onclick="votar('pregunta2','no')">Incluirlas en Método 1, 2 y 3</button>
+        <button data-pregunta="pregunta2" data-opcion="si">Método 4</button>
+        <button data-pregunta="pregunta2" data-opcion="no">Incluirlas en Método 1, 2 y 3</button>
       </div>
       <canvas id="grafico2" width="300" height="300"></canvas>
       <p id="porcentajes2" class="porcentajes">Cargando...</p>
@@ -246,8 +246,8 @@
     <div class="pregunta">
       <h3>¿Estás a favor de que Epistemología se pueda cursar sin haber cursado ni siquiera Filosofía?</h3>
       <div class="botones">
-        <button onclick="votar('pregunta3','si')">Sí</button>
-        <button onclick="votar('pregunta3','no')">No</button>
+        <button data-pregunta="pregunta3" data-opcion="si">Sí</button>
+        <button data-pregunta="pregunta3" data-opcion="no">No</button>
       </div>
       <canvas id="grafico3" width="300" height="300"></canvas>
       <p id="porcentajes3" class="porcentajes">Cargando...</p>
@@ -336,52 +336,96 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    async function votar(pregunta, opcion) {
+    // Variable global para la función votar
+    window.votar = async function(pregunta, opcion) {
       const clave = `yaVoto_${pregunta}`;
       if (localStorage.getItem(clave) === "true") {
         alert("Ya votaste en esta pregunta. Gracias por participar.");
         return;
       }
 
-      const refVoto = ref(db, `votos/${pregunta}/${opcion}`);
-      const snapshot = await get(refVoto);
-      const actual = snapshot.exists() ? snapshot.val() : 0;
-      await set(refVoto, actual + 1);
-      localStorage.setItem(clave, "true");
+      try {
+        const refVoto = ref(db, `votos/${pregunta}/${opcion}`);
+        const snapshot = await get(refVoto);
+        const actual = snapshot.exists() ? snapshot.val() : 0;
+        await set(refVoto, actual + 1);
+        localStorage.setItem(clave, "true");
+        console.log(`Voto registrado: ${pregunta} - ${opcion}`);
+      } catch (error) {
+        console.error("Error al votar:", error);
+        alert("Hubo un error al registrar tu voto. Intenta nuevamente.");
+      }
     }
+
+    // Asignar event listeners a los botones
+    document.addEventListener('DOMContentLoaded', function() {
+      const botonesVotar = document.querySelectorAll('.botones button');
+      botonesVotar.forEach(boton => {
+        boton.addEventListener('click', function() {
+          const pregunta = this.getAttribute('data-pregunta');
+          const opcion = this.getAttribute('data-opcion');
+          if (pregunta && opcion) {
+            window.votar(pregunta, opcion);
+          }
+        });
+      });
+    });
 
     onValue(ref(db, "votos"), (snapshot) => {
       const data = snapshot.val() || {};
+      console.log("Datos recibidos de Firebase:", data);
       dibujarTodos({
         pregunta1: data.pregunta1 || { si: 0, no: 0 },
         pregunta2: data.pregunta2 || { si: 0, no: 0 },
         pregunta3: data.pregunta3 || { si: 0, no: 0 },
       });
+    }, (error) => {
+      console.error("Error al leer datos de Firebase:", error);
     });
 
     function dibujarGrafico(canvasId, data, porcentajesId, color1, color2) {
-      const ctx = document.getElementById(canvasId).getContext("2d");
-      ctx.clearRect(0, 0, 300, 300);
-      const centroX = 150, centroY = 150, radio = 100;
-      const si = data.si || 0, no = data.no || 0;
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) {
+        console.error(`Canvas no encontrado: ${canvasId}`);
+        return;
+      }
+      
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const centroX = canvas.width / 2;
+      const centroY = canvas.height / 2;
+      const radio = Math.min(centroX, centroY) - 10;
+      
+      const si = data.si || 0;
+      const no = data.no || 0;
       const total = si + no || 1;
       const anguloSi = (si / total) * 2 * Math.PI;
 
+      // Dibujar sector "Sí"
       ctx.beginPath();
       ctx.moveTo(centroX, centroY);
-      ctx.fillStyle = color1;
       ctx.arc(centroX, centroY, radio, 0, anguloSi);
+      ctx.closePath();
+      ctx.fillStyle = color1;
       ctx.fill();
 
+      // Dibujar sector "No"
       ctx.beginPath();
       ctx.moveTo(centroX, centroY);
-      ctx.fillStyle = color2;
       ctx.arc(centroX, centroY, radio, anguloSi, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fillStyle = color2;
       ctx.fill();
 
+      // Actualizar porcentajes
       const porcentajeSi = ((si / total) * 100).toFixed(1);
       const porcentajeNo = ((no / total) * 100).toFixed(1);
-      document.getElementById(porcentajesId).textContent = `Sí: ${porcentajeSi}% | No: ${porcentajeNo}%`;
+      
+      const porcentajesElement = document.getElementById(porcentajesId);
+      if (porcentajesElement) {
+        porcentajesElement.textContent = `Sí: ${porcentajeSi}% | No: ${porcentajeNo}%`;
+      }
     }
 
     function dibujarTodos(data) {
@@ -389,7 +433,13 @@
       dibujarGrafico("grafico2", data.pregunta2, "porcentajes2", "#007bff", "#f0ad4e");
       dibujarGrafico("grafico3", data.pregunta3, "porcentajes3", "#6f42c1", "#dc3545");
     }
+
+    // Dibujar gráficos iniciales con datos vacíos
+    dibujarTodos({
+      pregunta1: { si: 0, no: 0 },
+      pregunta2: { si: 0, no: 0 },
+      pregunta3: { si: 0, no: 0 }
+    });
   </script>
 </body>
 </html>
-
