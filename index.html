@@ -172,6 +172,12 @@
       border-radius:8px;
     }
     .porcentajes { font-weight:bold; margin-top:5px; }
+    .total-respuestas {
+      margin-top: 8px;
+      font-size: 0.9em;
+      color: #666;
+      font-style: italic;
+    }
   </style>
 </head>
 
@@ -180,7 +186,7 @@
 
   <div class="intro intro-collapsible" id="intro" data-expanded="false" style="--intro-fade:#eef3ff;">
     <div class="intro-content" id="intro-content">
-      En el nuevo plan de estudios propuesto por la dirección de la carrera se marca una diferencia entre <strong>“Materias Electivas”</strong> y <strong>“Materias Optativas”</strong>.<br><br>
+      En el nuevo plan de estudios propuesto por la dirección de la carrera se marca una diferencia entre <strong>"Materias Electivas"</strong> y <strong>"Materias Optativas"</strong>.<br><br>
       Las Electivas están determinadas en el plan de estudios, son 35 y se espera que tengan cátedras paralelas así como también reúnan equipos de cátedra. Podrán cursarse un máximo de 8 y un mínimo de 6.<br><br>
       Las Optativas son de oferta renovable y de programa "libre", tal como las actuales. Podrán cursarse un máximo de 2 y un mínimo de 0. Representan como máximo un 25% (8/2) de las materias de elección libre y un 0% como mínimo.<br><br>
       Si una materia optativa no tiene más de 4 inscriptos durante dos cuatrimestres esa cátedra se cierra.<br><br>
@@ -231,6 +237,7 @@
       </div>
       <canvas id="grafico1" width="300" height="300"></canvas>
       <p id="porcentajes1" class="porcentajes">Cargando...</p>
+      <p id="total1" class="total-respuestas"></p>
     </div>
 
     <div class="pregunta">
@@ -241,20 +248,22 @@
       </div>
       <canvas id="grafico2" width="300" height="300"></canvas>
       <p id="porcentajes2" class="porcentajes">Cargando...</p>
+      <p id="total2" class="total-respuestas"></p>
     </div>
 
     <div class="pregunta">
-      <h3>¿Estás a favor de que Epistemología se pueda cursar sin haber cursado Filosofía?</h3>
+      <h3>¿Estás a favor de que Epistemología se pueda cursar sin haber cursado ni siquiera Filosofía?</h3>
       <div class="botones">
         <button data-pregunta="pregunta3" data-opcion="si">Sí</button>
         <button data-pregunta="pregunta3" data-opcion="no">No</button>
       </div>
       <canvas id="grafico3" width="300" height="300"></canvas>
       <p id="porcentajes3" class="porcentajes">Cargando...</p>
+      <p id="total3" class="total-respuestas"></p>
     </div>
 
     <p style="text-align:center; margin-top:30px; color:#555; font-size:0.9em;">
-      *Encuesta hecha por sociologxs*
+      *Esta encuesta es anónima y tiene fines ilustrativos para el debate sobre la reforma del plan de estudios.*
     </p>
   </section>
 
@@ -383,7 +392,7 @@
       console.error("Error al leer datos de Firebase:", error);
     });
 
-    function dibujarGrafico(canvasId, data, porcentajesId, color1, color2) {
+    function dibujarGrafico(canvasId, data, porcentajesId, totalId, color1, color2) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) {
         console.error(`Canvas no encontrado: ${canvasId}`);
@@ -399,39 +408,59 @@
       
       const si = data.si || 0;
       const no = data.no || 0;
-      const total = si + no || 1;
-      const anguloSi = (si / total) * 2 * Math.PI;
+      const total = si + no;
 
-      // Dibujar sector "Sí"
-      ctx.beginPath();
-      ctx.moveTo(centroX, centroY);
-      ctx.arc(centroX, centroY, radio, 0, anguloSi);
-      ctx.closePath();
-      ctx.fillStyle = color1;
-      ctx.fill();
+      // Solo dibujar si hay votos
+      if (total > 0) {
+        const anguloSi = (si / total) * 2 * Math.PI;
 
-      // Dibujar sector "No"
-      ctx.beginPath();
-      ctx.moveTo(centroX, centroY);
-      ctx.arc(centroX, centroY, radio, anguloSi, 2 * Math.PI);
-      ctx.closePath();
-      ctx.fillStyle = color2;
-      ctx.fill();
+        // Dibujar sector "Sí"
+        ctx.beginPath();
+        ctx.moveTo(centroX, centroY);
+        ctx.arc(centroX, centroY, radio, 0, anguloSi);
+        ctx.closePath();
+        ctx.fillStyle = color1;
+        ctx.fill();
+
+        // Dibujar sector "No"
+        ctx.beginPath();
+        ctx.moveTo(centroX, centroY);
+        ctx.arc(centroX, centroY, radio, anguloSi, 2 * Math.PI);
+        ctx.closePath();
+        ctx.fillStyle = color2;
+        ctx.fill();
+      } else {
+        // Dibujar círculo gris si no hay votos
+        ctx.beginPath();
+        ctx.arc(centroX, centroY, radio, 0, 2 * Math.PI);
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fill();
+      }
 
       // Actualizar porcentajes
-      const porcentajeSi = ((si / total) * 100).toFixed(1);
-      const porcentajeNo = ((no / total) * 100).toFixed(1);
+      const porcentajeSi = total > 0 ? ((si / total) * 100).toFixed(1) : "0.0";
+      const porcentajeNo = total > 0 ? ((no / total) * 100).toFixed(1) : "0.0";
       
       const porcentajesElement = document.getElementById(porcentajesId);
       if (porcentajesElement) {
         porcentajesElement.textContent = `Sí: ${porcentajeSi}% | No: ${porcentajeNo}%`;
       }
+
+      // Actualizar total de respuestas
+      const totalElement = document.getElementById(totalId);
+      if (totalElement) {
+        if (total === 0) {
+          totalElement.textContent = "Aún no hay respuestas";
+        } else {
+          totalElement.textContent = `Total de respuestas: ${total}`;
+        }
+      }
     }
 
     function dibujarTodos(data) {
-      dibujarGrafico("grafico1", data.pregunta1, "porcentajes1", "#28a745", "#dc3545");
-      dibujarGrafico("grafico2", data.pregunta2, "porcentajes2", "#007bff", "#f0ad4e");
-      dibujarGrafico("grafico3", data.pregunta3, "porcentajes3", "#6f42c1", "#dc3545");
+      dibujarGrafico("grafico1", data.pregunta1, "porcentajes1", "total1", "#28a745", "#dc3545");
+      dibujarGrafico("grafico2", data.pregunta2, "porcentajes2", "total2", "#007bff", "#f0ad4e");
+      dibujarGrafico("grafico3", data.pregunta3, "porcentajes3", "total3", "#6f42c1", "#dc3545");
     }
 
     // Dibujar gráficos iniciales con datos vacíos
@@ -443,4 +472,3 @@
   </script>
 </body>
 </html>
-
