@@ -345,6 +345,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // Configuración de etiquetas para cada pregunta
+    const etiquetasPreguntas = {
+      pregunta1: { si: "Sí", no: "No" },
+      pregunta2: { si: "Método 4", no: "Incluir en Métodos 1, 2 y 3" },
+      pregunta3: { si: "Sí", no: "No" }
+    };
+
     // Variable global para la función votar
     window.votar = async function(pregunta, opcion) {
       const clave = `yaVoto_${pregunta}`;
@@ -392,7 +399,7 @@
       console.error("Error al leer datos de Firebase:", error);
     });
 
-    function dibujarGrafico(canvasId, data, porcentajesId, totalId, color1, color2) {
+    function dibujarGrafico(canvasId, data, porcentajesId, totalId, preguntaId, color1, color2) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) {
         console.error(`Canvas no encontrado: ${canvasId}`);
@@ -437,13 +444,16 @@
         ctx.fill();
       }
 
-      // Actualizar porcentajes
+      // Obtener etiquetas personalizadas para esta pregunta
+      const etiquetas = etiquetasPreguntas[preguntaId] || { si: "Sí", no: "No" };
+
+      // Actualizar porcentajes con etiquetas personalizadas
       const porcentajeSi = total > 0 ? ((si / total) * 100).toFixed(1) : "0.0";
       const porcentajeNo = total > 0 ? ((no / total) * 100).toFixed(1) : "0.0";
       
       const porcentajesElement = document.getElementById(porcentajesId);
       if (porcentajesElement) {
-        porcentajesElement.textContent = `Sí: ${porcentajeSi}% | No: ${porcentajeNo}%`;
+        porcentajesElement.textContent = `${etiquetas.si}: ${porcentajeSi}% | ${etiquetas.no}: ${porcentajeNo}%`;
       }
 
       // Actualizar total de respuestas
@@ -458,9 +468,9 @@
     }
 
     function dibujarTodos(data) {
-      dibujarGrafico("grafico1", data.pregunta1, "porcentajes1", "total1", "#28a745", "#dc3545");
-      dibujarGrafico("grafico2", data.pregunta2, "porcentajes2", "total2", "#007bff", "#f0ad4e");
-      dibujarGrafico("grafico3", data.pregunta3, "porcentajes3", "total3", "#6f42c1", "#dc3545");
+      dibujarGrafico("grafico1", data.pregunta1, "porcentajes1", "total1", "pregunta1", "#28a745", "#dc3545");
+      dibujarGrafico("grafico2", data.pregunta2, "porcentajes2", "total2", "pregunta2", "#007bff", "#f0ad4e");
+      dibujarGrafico("grafico3", data.pregunta3, "porcentajes3", "total3", "pregunta3", "#6f42c1", "#dc3545");
     }
 
     // Dibujar gráficos iniciales con datos vacíos
@@ -472,5 +482,3 @@
   </script>
 </body>
 </html>
-
-
