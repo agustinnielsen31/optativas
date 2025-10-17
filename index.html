@@ -32,19 +32,15 @@
       font-size: 1em;
     }
 
-    /* Comportamiento colapsable de la intro */
     .intro-collapsible { position: relative; }
-
     .intro-content {
-      --preview-lines: 6; /* líneas visibles en vista previa */
+      --preview-lines: 6;
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: var(--preview-lines);
       overflow: hidden;
       position: relative;
     }
-
-    /* Desvanecido al estar colapsado */
     .intro-collapsible:not([data-expanded="true"]) .intro-content::after {
       content: "";
       position: absolute;
@@ -53,8 +49,6 @@
       background: linear-gradient(to bottom, rgba(238,243,255,0), var(--intro-fade, #eef3ff));
       pointer-events: none;
     }
-
-    /* Expandido: muestra todo el contenido */
     .intro-collapsible[data-expanded="true"] .intro-content {
       -webkit-line-clamp: unset;
       overflow: visible;
@@ -100,7 +94,6 @@
       background-color: #0056b3;
     }
 
-    /* Botón de toggle dentro de la intro */
     .intro-toggle {
       margin-top: 10px;
       display: inline-block;
@@ -113,6 +106,7 @@
       cursor: pointer;
       font: inherit;
     }
+
     .intro-toggle:hover { background-color: rgba(0, 123, 255, 0.08); }
     .intro-toggle:focus { outline: 2px solid #666; outline-offset: 2px; }
 
@@ -124,9 +118,7 @@
       font-size: 1.1em;
     }
 
-    .resultado-item {
-      margin-top: 10px;
-    }
+    .resultado-item { margin-top: 10px; }
 
     .insustentable {
       color: #d40000;
@@ -146,24 +138,44 @@
       text-decoration: none;
     }
 
-    .footer-link a:hover {
-      text-decoration: underline;
-    }
+    .footer-link a:hover { text-decoration: underline; }
 
-    /* Animación de fondo cuando hay alerta (rojo → amarillo) */
     @keyframes alertPulseBg {
       0%   { background-color: #ffe1e1; }
       50%  { background-color: #fff3c4; }
       100% { background-color: #ffe1e1; }
     }
-    body.alert-bg-animating {
-      animation: alertPulseBg 1.2s ease-in-out infinite;
-    }
-  </style>
-  <!-- Fin de estilos -->
-</head>
-<body>
+    body.alert-bg-animating { animation: alertPulseBg 1.2s ease-in-out infinite; }
 
+    /* === ESTILOS DE LAS ENCUESTAS === */
+    #encuestas {
+      margin-top: 60px;
+      border-top: 2px solid #ccc;
+      padding-top: 40px;
+    }
+    .pregunta { text-align:center; margin-bottom:50px; }
+    .pregunta h3 { font-weight:normal; margin-bottom:15px; }
+    .botones button {
+      background:#007bff;
+      color:white;
+      border:none;
+      padding:10px 20px;
+      border-radius:6px;
+      cursor:pointer;
+      margin:5px;
+    }
+    .botones button:hover { background:#0056b3; }
+    canvas {
+      display:block;
+      margin:15px auto;
+      border:1px solid #ddd;
+      border-radius:8px;
+    }
+    .porcentajes { font-weight:bold; margin-top:5px; }
+  </style>
+</head>
+
+<body>
   <h1>Calculadora de Estudiantes por Optativa (Un cuatrimestre)</h1>
 
   <div class="intro intro-collapsible" id="intro" data-expanded="false" style="--intro-fade:#eef3ff;">
@@ -180,11 +192,11 @@
     </button>
   </div>
 
-  <label for="demanda">Participación de las optativas en la demanda de materias de elección libre (Máximo 25%):</label>
+  <label for="demanda">Participación de las optativas en la demanda (máx. 25%):</label>
   <input type="range" id="demanda" min="0" max="0.25" step="0.01" value="0.10">
   <div class="range-value">Valor actual: <span id="valorDemanda">0.10</span></div>
 
-  <label for="estudiantes">Cantidad de estudiantes cursando materias de elección libre:</label>
+  <label for="estudiantes">Cantidad de estudiantes en el tramo de elección libre:</label>
   <input type="number" id="estudiantes" placeholder="Ej: 200" min="0">
 
   <label for="optativas">Cantidad de materias optativas ofertadas:</label>
@@ -193,12 +205,8 @@
   <button id="calcularBtn">Calcular</button>
 
   <div class="resultados" id="resultados">
-    <div class="resultado-item">
-      Total de estudiantes que cursarán optativas: <strong id="totalEstudiantes">-</strong>
-    </div>
-    <div class="resultado-item">
-      Estudiantes por cada optativa: <strong id="porOptativa">-</strong>
-    </div>
+    <div class="resultado-item">Total de estudiantes que cursarán optativas: <strong id="totalEstudiantes">-</strong></div>
+    <div class="resultado-item">Estudiantes por cada optativa: <strong id="porOptativa">-</strong></div>
     <div id="alertaInsustentable" class="insustentable" style="display:none;">
       ⚠️ Esquema insustentable: menos de 4 estudiantes por materia. La reforma no es "con todos adentro".
     </div>
@@ -210,16 +218,57 @@
     </a>
   </div>
 
+  <!-- === ENCUESTAS === -->
+  <section id="encuestas">
+    <h2 style="text-align:center;">📊 Encuesta interactiva</h2>
+    <p style="text-align:center; max-width:600px; margin:0 auto 40px;">
+      Participá respondiendo tres preguntas sobre el nuevo plan de estudios. Los resultados se actualizan en tiempo real.
+    </p>
+
+    <div class="pregunta">
+      <h3>¿Crees que el nuevo plan de estudios no excluirá a ninguna cátedra?</h3>
+      <div class="botones">
+        <button onclick="votar('pregunta1','si')">Sí</button>
+        <button onclick="votar('pregunta1','no')">No</button>
+      </div>
+      <canvas id="grafico1" width="300" height="300"></canvas>
+      <p id="porcentajes1" class="porcentajes">Cargando...</p>
+    </div>
+
+    <div class="pregunta">
+      <h3>¿Querés que las técnicas de investigación informáticas estén en una <em>Método 4</em> o que sean parte de los contenidos mínimos de las ya existentes <em>Método 1, 2 y 3</em>?</h3>
+      <div class="botones">
+        <button onclick="votar('pregunta2','si')">Método 4</button>
+        <button onclick="votar('pregunta2','no')">Incluirlas en Método 1, 2 y 3</button>
+      </div>
+      <canvas id="grafico2" width="300" height="300"></canvas>
+      <p id="porcentajes2" class="porcentajes">Cargando...</p>
+    </div>
+
+    <div class="pregunta">
+      <h3>¿Estás a favor de que Epistemología se pueda cursar sin haber cursado ni siquiera Filosofía?</h3>
+      <div class="botones">
+        <button onclick="votar('pregunta3','si')">Sí</button>
+        <button onclick="votar('pregunta3','no')">No</button>
+      </div>
+      <canvas id="grafico3" width="300" height="300"></canvas>
+      <p id="porcentajes3" class="porcentajes">Cargando...</p>
+    </div>
+
+    <p style="text-align:center; margin-top:30px; color:#555; font-size:0.9em;">
+      *Esta encuesta es anónima y tiene fines ilustrativos para el debate sobre la reforma del plan de estudios.*
+    </p>
+  </section>
+
+  <!-- === Scripts === -->
   <script>
     const demandaInput = document.getElementById("demanda");
     const valorDemanda = document.getElementById("valorDemanda");
     const calcularBtn = document.getElementById("calcularBtn");
-
     const totalEstudiantesEl = document.getElementById("totalEstudiantes");
     const porOptativaEl = document.getElementById("porOptativa");
     const alertaInsustentable = document.getElementById("alertaInsustentable");
 
-    // Mostrar valor actual de la barra
     demandaInput.addEventListener("input", () => {
       valorDemanda.textContent = Number(demandaInput.value).toFixed(2);
     });
@@ -240,8 +289,6 @@
       totalEstudiantesEl.textContent = total.toFixed(2);
       porOptativaEl.textContent = porOptativa.toFixed(2);
 
-      // Mostrar alerta si hay menos de 4 estudiantes por materia
-      // y activar animación de fondo por 10s o hasta que cambie
       if (porOptativa < 4) {
         alertaInsustentable.style.display = "block";
         document.body.classList.add('alert-bg-animating');
@@ -252,17 +299,13 @@
         }, 10000);
       } else {
         alertaInsustentable.style.display = "none";
-        if (window.__alertBgTimer) {
-          clearTimeout(window.__alertBgTimer);
-          window.__alertBgTimer = null;
-        }
+        if (window.__alertBgTimer) clearTimeout(window.__alertBgTimer);
         document.body.classList.remove('alert-bg-animating');
       }
     });
   </script>
 
   <script>
-    // Lógica del colapsable para la sección introductoria
     (function () {
       var wrapper = document.querySelector('.intro-collapsible');
       if (!wrapper) return;
@@ -277,7 +320,64 @@
     })();
   </script>
 
+  <!-- === Script de las ENCUESTAS === -->
+  <script>
+    async function obtenerDatos() {
+      const res = await fetch("/api/votos");
+      const data = await res.json();
+      dibujarTodos(data);
+    }
+
+    async function votar(pregunta, opcion) {
+      const clave = `yaVoto_${pregunta}`;
+      if (localStorage.getItem(clave) === "true") {
+        alert("Ya votaste en esta pregunta. Gracias por participar.");
+        return;
+      }
+
+      await fetch("/api/votos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pregunta, opcion }),
+      });
+
+      localStorage.setItem(clave, "true");
+      obtenerDatos();
+    }
+
+    function dibujarGrafico(canvasId, data, porcentajesId, color1, color2) {
+      const ctx = document.getElementById(canvasId).getContext("2d");
+      ctx.clearRect(0, 0, 300, 300);
+      const centroX = 150, centroY = 150, radio = 100;
+      const { si, no } = data;
+      const total = si + no;
+      const anguloSi = (si / total) * 2 * Math.PI;
+
+      ctx.beginPath();
+      ctx.moveTo(centroX, centroY);
+      ctx.fillStyle = color1;
+      ctx.arc(centroX, centroY, radio, 0, anguloSi);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(centroX, centroY);
+      ctx.fillStyle = color2;
+      ctx.arc(centroX, centroY, radio, anguloSi, 2 * Math.PI);
+      ctx.fill();
+
+      const porcentajeSi = ((si / total) * 100).toFixed(1);
+      const porcentajeNo = ((no / total) * 100).toFixed(1);
+      document.getElementById(porcentajesId).textContent = `Sí: ${porcentajeSi}% | No: ${porcentajeNo}%`;
+    }
+
+    function dibujarTodos(data) {
+      dibujarGrafico("grafico1", data.pregunta1, "porcentajes1", "#28a745", "#dc3545");
+      dibujarGrafico("grafico2", data.pregunta2, "porcentajes2", "#007bff", "#f0ad4e");
+      dibujarGrafico("grafico3", data.pregunta3, "porcentajes3", "#6f42c1", "#dc3545");
+    }
+
+    obtenerDatos();
+  </script>
+
 </body>
 </html>
-
-
