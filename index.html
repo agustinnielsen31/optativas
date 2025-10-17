@@ -187,9 +187,7 @@
       <strong>¿El esquema que propone el plan actual es sustentable para las optativas?</strong> Esta calculadora permite averiguarlo teniendo en cuenta tres variables: cantidad de estudiantes en el tramo de elección libre, participación de optativas en la demanda y total de materias optativas.<br><br>
       Por ejemplo, si hay 300 estudiantes y el 20% hace materias optativas, eso nos deja con 60 estudiantes que cursarán optativas. Si hay 20 cátedras de materias optativas entonces, como mínimo cada cátedra podrá tener 3 estudiantes (60/20 = 3), por lo cual el esquema sería insustentable.
     </div>
-    <button class="intro-toggle" type="button" aria-expanded="false" aria-controls="intro-content">
-      Mostrar más
-    </button>
+    <button class="intro-toggle" type="button" aria-expanded="false" aria-controls="intro-content">Mostrar más</button>
   </div>
 
   <label for="demanda">Participación de las optativas en la demanda (máx. 25%):</label>
@@ -218,7 +216,7 @@
     </a>
   </div>
 
-  <!-- === ENCUESTAS === -->
+  <!-- === ENCUESTAS con Firebase === -->
   <section id="encuestas">
     <h2 style="text-align:center;">📊 Encuesta interactiva</h2>
     <p style="text-align:center; max-width:600px; margin:0 auto 40px;">
@@ -226,7 +224,7 @@
     </p>
 
     <div class="pregunta">
-      <h3>¿Crees que el nuevo plan de estudios excluirá a cátedras o llevará a su cierre?</h3>
+      <h3>¿Crees que el nuevo plan de estudios no excluirá a ninguna cátedra?</h3>
       <div class="botones">
         <button onclick="votar('pregunta1','si')">Sí</button>
         <button onclick="votar('pregunta1','no')">No</button>
@@ -256,7 +254,7 @@
     </div>
 
     <p style="text-align:center; margin-top:30px; color:#555; font-size:0.9em;">
-      *¿Por qué la carrera no hace consulta popular?*
+      *Esta encuesta es anónima y tiene fines ilustrativos para el debate sobre la reforma del plan de estudios.*
     </p>
   </section>
 
@@ -320,13 +318,23 @@
     })();
   </script>
 
-  <!-- === Script de las ENCUESTAS === -->
-  <script>
-    async function obtenerDatos() {
-      const res = await fetch("/api/votos");
-      const data = await res.json();
-      dibujarTodos(data);
-    }
+  <!-- === Firebase y Encuestas === -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC83iiDELDUZxuCEw6d-GwyTu2myQXb88g",
+      authDomain: "encuesta-optativas.firebaseapp.com",
+      databaseURL: "https://encuesta-optativas-default-rtdb.firebaseio.com",
+      projectId: "encuesta-optativas",
+      storageBucket: "encuesta-optativas.firebasestorage.app",
+      messagingSenderId: "522217425445",
+      appId: "1:522217425445:web:1d026462b42666cf530dcc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
     async function votar(pregunta, opcion) {
       const clave = `yaVoto_${pregunta}`;
@@ -335,22 +343,28 @@
         return;
       }
 
-      await fetch("/api/votos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pregunta, opcion }),
-      });
-
+      const refVoto = ref(db, `votos/${pregunta}/${opcion}`);
+      const snapshot = await get(refVoto);
+      const actual = snapshot.exists() ? snapshot.val() : 0;
+      await set(refVoto, actual + 1);
       localStorage.setItem(clave, "true");
-      obtenerDatos();
     }
+
+    onValue(ref(db, "votos"), (snapshot) => {
+      const data = snapshot.val() || {};
+      dibujarTodos({
+        pregunta1: data.pregunta1 || { si: 0, no: 0 },
+        pregunta2: data.pregunta2 || { si: 0, no: 0 },
+        pregunta3: data.pregunta3 || { si: 0, no: 0 },
+      });
+    });
 
     function dibujarGrafico(canvasId, data, porcentajesId, color1, color2) {
       const ctx = document.getElementById(canvasId).getContext("2d");
       ctx.clearRect(0, 0, 300, 300);
       const centroX = 150, centroY = 150, radio = 100;
-      const { si, no } = data;
-      const total = si + no;
+      const si = data.si || 0, no = data.no || 0;
+      const total = si + no || 1;
       const anguloSi = (si / total) * 2 * Math.PI;
 
       ctx.beginPath();
@@ -375,11 +389,6 @@
       dibujarGrafico("grafico2", data.pregunta2, "porcentajes2", "#007bff", "#f0ad4e");
       dibujarGrafico("grafico3", data.pregunta3, "porcentajes3", "#6f42c1", "#dc3545");
     }
-
-    obtenerDatos();
   </script>
-
 </body>
 </html>
-
-
